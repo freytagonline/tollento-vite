@@ -142,7 +142,7 @@ export default function App() {
       } else {
         setSuccess(true);
         // Hier könntest du zur Dashboard-Seite weiterleiten
-        console.log("Login erfolgreich:", data);
+        console.log("Login erfolgreich");
       }
     } catch (error) {
       setError("Ein unerwarteter Fehler ist aufgetreten.");
