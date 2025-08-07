@@ -10,7 +10,7 @@ function App() {
     // Test der Supabase-Verbindung
     const testConnection = async () => {
       try {
-        const { data, error } = await supabase.from('test').select('*').limit(1)
+        const { error } = await supabase.from('test').select('*').limit(1)
         
         if (error) {
           if (error.code === 'PGRST116') {
