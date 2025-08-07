@@ -8,7 +8,7 @@ interface HeaderProps {
   loading?: boolean;
 }
 
-export default function Header({ onLogout, logoutDisabled, user, loading }: HeaderProps) {
+export default function Header({ onLogout, logoutDisabled, loading }: HeaderProps) {
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
 
   return (
