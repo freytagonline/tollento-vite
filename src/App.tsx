@@ -10,60 +10,26 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [emailStatus, setEmailStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
-  const [emailMessage, setEmailMessage] = useState<string>("");
 
   // E-Mail-Prüfung mit Debouncing
   useEffect(() => {
     if (!email || showLogin) {
-      setEmailStatus('idle');
-      setEmailMessage("");
       return;
     }
 
     // Einfache Email-Validierung
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setEmailStatus('invalid');
-      setEmailMessage("Bitte geben Sie eine gültige E-Mail-Adresse ein.");
       return;
     }
 
-    setEmailStatus('checking');
-    setEmailMessage("Prüfe E-Mail-Adresse...");
-
     const timeoutId = setTimeout(async () => {
       try {
-        // Einfache Supabase-Abfrage mit Fehlerbehandlung
-        const { data, error } = await supabase
-          .from('auth.users')
-          .select('email')
-          .eq('email', email)
-          .limit(1);
-        
-        if (error) {
-          // Wenn die Tabelle nicht existiert, nehmen wir an, dass die Email verfügbar ist
-          if (error.code === 'PGRST116' || error.code === '42P01') {
-            setEmailStatus('available');
-            setEmailMessage("E-Mail-Adresse ist verfügbar.");
-          } else {
-            console.error("Supabase Fehler:", error);
-            setEmailStatus('idle');
-            setEmailMessage("");
-          }
-        } else {
-          if (data && data.length > 0) {
-            setEmailStatus('taken');
-            setEmailMessage("Diese E-Mail-Adresse ist bereits registriert.");
-          } else {
-            setEmailStatus('available');
-            setEmailMessage("E-Mail-Adresse ist verfügbar.");
-          }
-        }
+        // Teste Supabase-Verbindung ohne problematische Abfrage
+        await supabase.auth.getUser();
+        console.log("Supabase-Verbindung OK");
       } catch (err) {
-        console.error("Fehler bei E-Mail-Prüfung:", err);
-        setEmailStatus('idle');
-        setEmailMessage("");
+        console.error("Supabase-Verbindungsfehler:", err);
       }
     }, 500);
 
@@ -74,22 +40,6 @@ export default function App() {
     e.preventDefault();
     setError(null);
     setSuccess(false);
-
-    // Validierung
-    if (emailStatus === 'invalid') {
-      setError("Bitte gib eine gültige E-Mail-Adresse ein.");
-      return;
-    }
-    
-    if (emailStatus === 'taken') {
-      setError("Diese E-Mail-Adresse ist bereits registriert.");
-      return;
-    }
-    
-    if (emailStatus === 'checking') {
-      setError("Bitte warten Sie, während wir Ihre E-Mail-Adresse prüfen.");
-      return;
-    }
 
     if (password.length < 6) {
       setError("Das Passwort muss mindestens 6 Zeichen lang sein.");
@@ -115,8 +65,6 @@ export default function App() {
         setSuccess(true);
         setEmail("");
         setPassword("");
-        setEmailStatus('idle');
-        setEmailMessage("");
       }
     } catch (error) {
       console.error("Registrierungsfehler:", error);
@@ -217,16 +165,6 @@ export default function App() {
                 placeholder="ihre@email.com"
                 required
               />
-              {emailMessage && (
-                <p className={`text-sm mt-1 ${
-                  emailStatus === 'available' ? 'text-green-600' :
-                  emailStatus === 'taken' ? 'text-red-600' :
-                  emailStatus === 'invalid' ? 'text-red-600' :
-                  'text-gray-600'
-                }`}>
-                  {emailMessage}
-                </p>
-              )}
             </div>
             
             <div>
@@ -246,7 +184,7 @@ export default function App() {
             
             <button
               type="submit"
-              disabled={loading || (emailStatus === 'checking' && !showLogin)}
+              disabled={loading}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Verarbeite..." : (showLogin ? "Anmelden" : "Registrieren")}
@@ -261,8 +199,6 @@ export default function App() {
                   setPassword("");
                   setError(null);
                   setSuccess(false);
-                  setEmailStatus('idle');
-                  setEmailMessage("");
                 }}
                 className="text-blue-600 hover:text-blue-800 transition-colors"
               >
